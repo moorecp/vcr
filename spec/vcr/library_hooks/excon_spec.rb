@@ -118,7 +118,7 @@ describe "Excon hook" do
       stubbed_error.class.should be(real_error.class)
     end
 
-    it_behaves_like "request hooks", :excon do
+    it_behaves_like "request hooks", :excon, :recording do
       undef make_request
       def make_request(disabled = false)
         expect {

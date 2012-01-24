@@ -3,22 +3,36 @@ module VCR
   class RequestHandler
     def handle
       invoke_before_request_hook
+
       return on_ignored_request    if should_ignore?
       return on_stubbed_request    if stubbed_response
       return on_recordable_request if VCR.real_http_connections_allowed?
       on_connection_not_allowed
     end
 
+    def typed_request
+      @typed_request ||= VCR::Request::Typed.apply_to(vcr_request, request_type)
+    end
+
   private
+
+    def request_type
+      @request_type ||= case
+        when should_ignore?                     then :ignored
+        when stubbed_response                   then :stubbed
+        when VCR.real_http_connections_allowed? then :recording
+        else                                         :unhandled
+      end
+    end
 
     def invoke_before_request_hook
       return if disabled?
-      VCR.configuration.invoke_hook(:before_http_request, vcr_request)
+      VCR.configuration.invoke_hook(:before_http_request, typed_request)
     end
 
     def invoke_after_request_hook(vcr_response)
       return if disabled?
-      VCR.configuration.invoke_hook(:after_http_request, vcr_request, vcr_response)
+      VCR.configuration.invoke_hook(:after_http_request, typed_request, vcr_response)
     end
 
     def should_ignore?

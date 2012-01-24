@@ -35,15 +35,15 @@ module VCR
           @request = request
         end
 
+        def vcr_request
+          @vcr_request ||= vcr_request_from(request)
+        end
+
       private
 
         def on_connection_not_allowed
           invoke_after_request_hook(nil)
           super
-        end
-
-        def vcr_request
-          @vcr_request ||= vcr_request_from(request)
         end
 
         def on_stubbed_request
@@ -67,14 +67,15 @@ module VCR
       extend Helpers
       ::Typhoeus::Hydra.after_request_before_on_complete do |request|
         unless VCR.library_hooks.disabled?(:typhoeus)
-          vcr_request, vcr_response = vcr_request_from(request), vcr_response_from(request.response)
+          handler = VCR::LibraryHooks::Typhoeus::RequestHandler.new(request)
+          vcr_response = vcr_response_from(request.response)
 
           unless request.response.mock?
-            http_interaction = VCR::HTTPInteraction.new(vcr_request, vcr_response)
+            http_interaction = VCR::HTTPInteraction.new(handler.vcr_request, vcr_response)
             VCR.record_http_interaction(http_interaction)
           end
 
-          VCR.configuration.invoke_hook(:after_http_request, vcr_request, vcr_response)
+          VCR.configuration.invoke_hook(:after_http_request, handler.typed_request, vcr_response)
         end
       end
 

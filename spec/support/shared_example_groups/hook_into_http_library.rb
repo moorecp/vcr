@@ -252,13 +252,13 @@ shared_examples_for "a hook into an HTTP library" do |library_hook_name, library
           VCR.configuration.ignore_request { |r| true }
         end
 
-        it_behaves_like "request hooks", library_hook_name
+        it_behaves_like "request hooks", library_hook_name, :ignored
       end
 
       context 'when the request is recorded' do
         let!(:inserted_cassette) { VCR.insert_cassette('new_cassette') }
 
-        it_behaves_like "request hooks", library_hook_name do
+        it_behaves_like "request hooks", library_hook_name, :recording do
           let(:string_in_cassette) { 'example.com get response 1 with path=foo' }
 
           it 'plays back the cassette when a request is made' do
@@ -290,11 +290,11 @@ shared_examples_for "a hook into an HTTP library" do |library_hook_name, library
           stub_requests([http_interaction(request_url)], [:method, :uri])
         end
 
-        it_behaves_like "request hooks", library_hook_name
+        it_behaves_like "request hooks", library_hook_name, :stubbed
       end
 
       context 'when the request is not allowed' do
-        it_behaves_like "request hooks", library_hook_name do
+        it_behaves_like "request hooks", library_hook_name, :unhandled do
           undef assert_expected_response
           def assert_expected_response(response)
             response.should be_nil

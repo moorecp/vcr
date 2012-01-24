@@ -136,6 +136,16 @@ module VCR
       extend FiberAware
     end
 
+    module Typed
+      attr_reader :type
+
+      def self.apply_to(request, type)
+        request.extend self
+        request.instance_variable_set(:@type, type)
+        request
+      end
+    end
+
     # Designed to be extended onto a {VCR::Request} instance in order to make
     # it fiber-aware for the {VCR::Configuration#around_http_request} hook.
     module FiberAware
