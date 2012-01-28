@@ -187,7 +187,7 @@ module VCR
     end
 
     def should_stub_requests?
-      record_mode != :all
+      ![:all, :truncate].include? record_mode
     end
 
     def should_remove_matching_existing_interactions?
