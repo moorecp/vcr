@@ -17,7 +17,9 @@ module VCR
     #   * :new_episodes -- Playback previously recorded HTTP interactions and record new ones.
     #   * :once -- Record the HTTP interactions if the cassette has not already been recorded;
     #              otherwise, playback the HTTP interactions.
-    VALID_RECORD_MODES = [:all, :none, :new_episodes, :once]
+    #   * :truncate -- If a cassette already exists, it deletes the contents, then
+    #                  records every HTTP interation; does not play any back
+    VALID_RECORD_MODES = [:all, :none, :new_episodes, :once, :truncate]
 
     # @return [#to_s] The name of the cassette. Used to determine the cassette's file name.
     # @see #file
@@ -188,11 +190,16 @@ module VCR
       record_mode == :all
     end
 
+    def should_remove_all_existing_interactions?
+      record_mode == :truncate
+    end
+
     def raw_yaml_content
       VCR::Cassette::Reader.new(file, erb).read
     end
 
     def merged_interactions
+      return new_recorded_interactions if should_remove_all_existing_interactions?
       old_interactions = previously_recorded_interactions
 
       if should_remove_matching_existing_interactions?
