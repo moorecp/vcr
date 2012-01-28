@@ -41,6 +41,9 @@ module VCR
     # @return [Integer, nil] How frequently (in seconds) the cassette should be re-recorded.
     attr_reader :re_record_interval
 
+    # @return [Symbol] The recording mode to use when re-recording occurs
+    attr_reader :re_record_mode
+
     # @return [Array<Symbol>] If set, {VCR::Configuration#before_record} and
     #  {VCR::Configuration#before_playback} hooks with a corresponding tag will apply.
     attr_reader :tags
@@ -52,7 +55,7 @@ module VCR
       invalid_options = options.keys - [
         :record, :erb, :match_requests_on, :re_record_interval, :tag, :tags,
         :update_content_length_header, :allow_playback_repeats, :exclusive,
-        :serialize_with, :preserve_exact_body_bytes
+        :serialize_with, :preserve_exact_body_bytes, :re_record_mode
       ]
 
       if invalid_options.size > 0
@@ -64,13 +67,14 @@ module VCR
       @erb                          = options[:erb]
       @match_requests_on            = options[:match_requests_on]
       @re_record_interval           = options[:re_record_interval]
+      @re_record_mode               = options[:re_record_mode]
       @tags                         = Array(options.fetch(:tags) { options[:tag] })
       @tags                         << :update_content_length_header if options[:update_content_length_header]
       @tags                         << :preserve_exact_body_bytes if options[:preserve_exact_body_bytes]
       @allow_playback_repeats       = options[:allow_playback_repeats]
       @exclusive                    = options[:exclusive]
       @serializer                   = VCR.cassette_serializers[options[:serialize_with]]
-      @record_mode                  = :all if should_re_record?
+      @record_mode                  = @re_record_mode if should_re_record?
       @parent_list                  = @exclusive ? HTTPInteractionList::NullList : VCR.http_interactions
 
       raise_error_unless_valid_record_mode

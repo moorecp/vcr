@@ -398,7 +398,8 @@ module VCR
       @default_cassette_options = {
         :record            => :once,
         :match_requests_on => RequestMatcherRegistry::DEFAULT_MATCHERS,
-        :serialize_with    => :yaml
+        :serialize_with    => :yaml,
+        :re_record_mode    => :all
       }
 
       self.debug_logger = NullDebugLogger
